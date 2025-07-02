@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('name')->nullable();
             $table->decimal('price', 10,2)->nullable();
+            $table->text('description')->nullable();
             $table->string('feature_image')->nullable();
             $table->string('feature_image_original_name')->nullable();
             $table->timestamps();

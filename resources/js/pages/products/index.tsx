@@ -5,6 +5,7 @@ import { type BreadcrumbItem } from '@/types';
 import { Head, usePage } from '@inertiajs/react';
 import { Link } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
+import { CirclePlus, Eye, Pencil, Trash } from 'lucide-react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -51,7 +52,8 @@ export default function Index({products}:{products: Product[]}) {
                     </Alert>
                 )}
                 <div className='ml-auto'>
-                <Link as='button' className='bg-indigo-800 px-4 py-2 rounded-lg text-white text-md cursor-pointer hover:opacity-90' href={route('products.create')}>Add Product</Link>
+                <Link as='button' className='bg-indigo-800 px-4 py-2 rounded-lg text-white text-md cursor-pointer hover:opacity-90 flex item-center justify-center gap-1' href={route('products.create')}>
+                <CirclePlus className="inline"/> Add Product</Link>
                 </div>
 
                 <div className="overflow-hidden rounded-lg border bg-white shadow-sm">
@@ -76,7 +78,13 @@ export default function Index({products}:{products: Product[]}) {
                                 <td className='px-4 py-2 text-center border'>{product.price}</td>
                                 <td className='px-4 py-2 text-center border'><img src={`/storage/${product.feature_image}`} alt={product.name} className='h-16 w-16 object-cover' /></td>
                                 <td className='px-4 py-2 text-center border'>{product.created_at}</td>
-                                <td className='px-4 py-2 text-center border'></td>
+                                <td className='px-4 py-2 text-center border'>
+                                    <div className='flex gap-1 h-full'>
+                                    <Link as='button' className='bg-sky-600 text-white p-2 rounded-lg cursor-pointer hover:opacity-90' href={route('products.show', product.id)}><Eye/></Link>
+                                    <Link as='button' className='bg-sky-600 text-white p-2 rounded-lg cursor-pointer hover:opacity-90' href={route('products.edit', product.id)}><Pencil/></Link>
+                                    <Link as='button' className='bg-red-600 text-white p-2 rounded-lg cursor-pointer hover:opacity-90' href={route('products.show', product.id)}><Trash/></Link>
+                                    </div>
+                                </td>
                             </tr>
                             ))}
                         </tbody>

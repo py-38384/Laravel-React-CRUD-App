@@ -15,19 +15,18 @@ class ProductController extends Controller
      */
     public function index()
     {
-        // $products = Product::latest()->get()->map(function ($product){
-        //     return [
-        //         "id" => $product->id,
-        //         "name" => $product->name,
-        //         "price" => $product->price,
-        //         "description" => $product->description,
-        //         "feature_image" => $product->feature_image,
-        //         "feature_image_original_name" => $product->feature_image_original_name,
-        //         "created_at" => $product->created_at->format("d M Y"),
-        //     ];
-        // });
-        $products = Product::latest()->get();
-        dd($products);
+        $products = Product::latest()->get()->map(function ($product){
+            return [
+                "id" => $product->id,
+                "name" => $product->name,
+                "price" => $product->price,
+                "description" => $product->description,
+                "feature_image" => $product->feature_image,
+                "feature_image_original_name" => $product->feature_image_original_name,
+                "created_at" => $product->created_at->format("d M Y"),
+            ];
+        });
+        // $products = Product::latest()->get();
         return Inertia::render('products/index',['products' => $products]);
     }
 
@@ -74,7 +73,10 @@ class ProductController extends Controller
      */
     public function show(Product $product)
     {
-        //
+        return Inertia::render('products/product-form',[
+            'product' => $product,
+            'is_view' => true,
+        ]);
     }
 
     /**

@@ -8,6 +8,7 @@ import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, useForm } from '@inertiajs/react';
 import React, { ChangeEvent } from 'react';
+import { ArrowLeft } from 'lucide-react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -15,12 +16,25 @@ const breadcrumbs: BreadcrumbItem[] = [
         href: route('products.create'),
     },
 ];
-
-export default function ProductForm() {
+interface Product{
+    id: number,
+    name: string,
+    description: string,
+    price: number,
+    feature_image: string
+    created_at: string
+}
+export default function ProductForm({ product, is_view, is_edit} : {product: Product, is_view: boolean, is_edit: boolean}) {
+    const breadcrumbs: BreadcrumbItem[] = [
+        {
+            title: `${is_view ? "Show": (is_edit? "Edit": "Create")} Products`,
+            href: route('products.create'),
+        },
+    ];
     const { data, setData, post, processing, errors } = useForm({
-        name: '',
-        description: '',
-        price: '',
+        name: product?.name || '',
+        description: product?.description || '',
+        price: product?.price || '',
         featured_image: null as File | null
     });
     const submit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -41,15 +55,15 @@ export default function ProductForm() {
                 <div className="ml-auto">
                     <Link
                         as="button"
-                        className="text-md cursor-pointer rounded-lg bg-indigo-800 px-4 py-2 text-white hover:opacity-90"
+                        className="text-md cursor-pointer rounded-lg bg-indigo-800 px-4 py-2 text-white hover:opacity-90 flex item-center justify-center gap-1"
                         href={route('products.index')}
                     >
-                        Back to Products
+                        <ArrowLeft className="me-2"/> Back to Products
                     </Link>
                 </div>
                 <Card>
                     <CardHeader>
-                        <CardTitle>Create Product</CardTitle>
+                        <CardTitle>{is_view ? "Show":(is_edit? "Edit": "Create")} Product</CardTitle>
                     </CardHeader>
                     <CardContent>
                         <form onSubmit={submit} className="flex flex-col gap-4" autoComplete="off">
@@ -63,6 +77,7 @@ export default function ProductForm() {
                                         name="name" 
                                         type="text" placeholder="Product name" autoFocus 
                                         tabIndex={1}
+                                        readOnly={is_view || processing}
                                     ></Input>
                                     <InputError message={errors.name}/>
                                 </div>
@@ -73,7 +88,9 @@ export default function ProductForm() {
                                         onChange={(e) => setData('description', e.target.value)}
                                         id="description" name="description" 
                                         tabIndex={2} placeholder="Product Description" 
-                                        rows={7} />
+                                        rows={7}
+                                        readOnly={is_view || processing} 
+                                    />
                                      <InputError message={errors.description}/>
                                 </div>
                                 <div className="grid gap-2">
@@ -85,9 +102,11 @@ export default function ProductForm() {
                                         name="price" 
                                         type="text" placeholder="Product Price" autoFocus 
                                         tabIndex={3}
+                                        readOnly={is_view || processing}
                                     ></Input>
                                     <InputError message={errors.price}/>
                                 </div>
+                                {!is_view && (
                                 <div className="grid gap-2">
                                     <Label htmlFor="name">Featured Image</Label>
                                     <Input 
@@ -95,12 +114,16 @@ export default function ProductForm() {
                                         autoFocus 
                                         tabIndex={4}
                                         onChange={handleFileUpload}
+                                        readOnly={is_view || processing}
                                     ></Input>
                                     <InputError message={errors.featured_image}/>
                                 </div>
-                                <Button type="submit" className="mt-4 w-fit cursor-pointer" tabIndex={4}>
-                                    Save Product
-                                </Button>
+                                )}
+                                {!is_view && (
+                                    <Button type="submit" className="mt-4 w-fit cursor-pointer" tabIndex={4}>
+                                        Save Product
+                                    </Button>
+                                )}
                             </div>
                         </form>
                     </CardContent>

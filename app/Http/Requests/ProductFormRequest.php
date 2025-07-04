@@ -21,12 +21,17 @@ class ProductFormRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [
+        $validateRules = [
             "name"=> ["required","string","max:255"],
             "description" => ["required","string","max:1000"],
             "price" => ["required","numeric","min:0"],
-            "featured_image" => ["nullable","image","mimes:jpeg,png,jpg,gif","max:2048"],
         ];
+        if($this->routeIs('products.update')){
+            $validateRules['featured_image'] = ["nullable","image","mimes:jpeg,png,jpg,gif","max:2048"];
+        } elseif($this->routeIs('products.create')){
+            $validateRules['featured_image'] = ["required","image","mimes:jpeg,png,jpg,gif","max:2048"];
+        }
+        return $validateRules;
     }
     /**
      * Summary of messages

@@ -2,10 +2,11 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { PlaceholderPattern } from '@/components/ui/placeholder-pattern';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
-import { Head, usePage } from '@inertiajs/react';
+import { Button } from '@/components/ui/button';
+import { Head, router, usePage } from '@inertiajs/react';
 import { Link } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
-import { CirclePlus, Eye, Pencil, Trash } from 'lucide-react';
+import { CirclePlus, Eye, Pencil, Trash, Trash2 } from 'lucide-react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -23,20 +24,31 @@ interface Product{
     created_at: string
 }
 export default function Index({products}:{products: Product[]}) {
-    const { flash } = usePage<{ flash?: { success?: string; error?: string }}>().props;
+    // const { flash } = usePage<{ flash?: { success?: string; error?: string }}>().props;
+    // const flashMessage = flash?.success || flash?.error;
+    // const alertClasses = `${flash?.success ? 'bg-green-800': flash?.error? 'bg-red-800': ''} ml-auto max-w-md text-white`;
+
+    // const [showAlert, setShowAlert] = useState((flash?.success|| flash?.error)? true: false)
+    // console.log(flashMessage, flash, showAlert)
+    // useEffect(() => {
+    //     const timer = setTimeout(() => {
+    //         if(flashMessage){
+    //             setShowAlert(false)
+    //         }
+    //     }, 3000)
+    //     return () => clearTimeout(timer);
+    // },[flashMessage])
+    const { flash } = usePage<{ flash?: { success?: string; error?: string } }>().props;
     const flashMessage = flash?.success || flash?.error;
-    const alertClasses = `${flash?.success ? 'bg-green-800': flash?.error? 'bg-red-800': ''} ml-auto max-w-md text-white`;
-
-    const [showAlert, setShowAlert] = useState(flashMessage? true: false)
-
+    const [showAlert, setShowAlert] = useState(flash?.success || flash?.error ? true : false);
     useEffect(() => {
-        const timer = setTimeout(() => {
-            if(flashMessage){
-                setShowAlert(false)
-            }
-        }, 3000)
-        return () => clearTimeout(timer);
-    },[flashMessage])
+        console.log(flash)
+        if (flashMessage) {
+            const timer = setTimeout(() => setShowAlert(false), 3000);
+            return () => clearTimeout(timer);
+        }
+    }, [flashMessage]);
+    const alertClasses = `${flash?.success ? 'bg-green-800': flash?.error? 'bg-red-800': ''} ml-auto max-w-md text-white`;
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Products Management" />
@@ -70,11 +82,11 @@ export default function Index({products}:{products: Product[]}) {
                             </tr>
                         </thead>
                         <tbody>
-                            {products.map((product: Product, index) => (
+                            {products.length > 0 ? products.map((product: Product, index) => (
                             <tr key={index}>
                                 <td className='px-4 py-2 text-center border'>{index+1}.</td>
                                 <td className='px-4 py-2 text-center border'>{product.name}</td>
-                                <td className='px-4 py-2 text-center border'>{product.description}</td>
+                                <td className='px-4 py-2 text-center border w-[400px]'>{product.description.length >= 40? `${product.description.substring(0, 40)}...`: product.description}</td>
                                 <td className='px-4 py-2 text-center border'>{product.price}</td>
                                 <td className='px-4 py-2 text-center border'><img src={`/storage/${product.feature_image}`} alt={product.name} className='h-16 w-16 object-cover' /></td>
                                 <td className='px-4 py-2 text-center border'>{product.created_at}</td>
@@ -82,11 +94,24 @@ export default function Index({products}:{products: Product[]}) {
                                     <div className='flex gap-1 h-full'>
                                     <Link as='button' className='bg-sky-600 text-white p-2 rounded-lg cursor-pointer hover:opacity-90' href={route('products.show', product.id)}><Eye/></Link>
                                     <Link as='button' className='bg-sky-600 text-white p-2 rounded-lg cursor-pointer hover:opacity-90' href={route('products.edit', product.id)}><Pencil/></Link>
-                                    <Link as='button' className='bg-red-600 text-white p-2 rounded-lg cursor-pointer hover:opacity-90' href={route('products.show', product.id)}><Trash/></Link>
+                                    <Button className='bg-red-600 text-white p-5 rounded-lg cursor-pointer hover:opacity-90' onClick={() => {
+                                        if(confirm('Are you sure?')){
+                                            router.delete(route('products.destroy', product.id),{
+                                                preserveScroll: true
+                                            })
+                                        }
+                                    }}><Trash2 style={{ 
+                                        width: "20px",
+                                        height: "20px",
+                                    }}/></Button>
                                     </div>
                                 </td>
                             </tr>
-                            ))}
+                            )): (
+                                <tr>
+                                    <td colSpan={7} className='px-4 py-2 text-center border'>No Records Found</td>
+                                </tr>
+                            )}
                         </tbody>
                     </table>
                 </div>

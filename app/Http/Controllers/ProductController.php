@@ -6,6 +6,7 @@ use Inertia\Inertia;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\File;
 use App\Http\Requests\ProductFormRequest;
 
 class ProductController extends Controller
@@ -84,15 +85,44 @@ class ProductController extends Controller
      */
     public function edit(Product $product)
     {
-        //
+        return Inertia::render('products/product-form',[
+            'product' => $product,
+            'is_edit' => true,
+        ]);
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Product $product)
+    public function update(ProductFormRequest $request, Product $product)
     {
-        //
+        if($product){
+            if($request->file('featured_image')){
+                $featured_image = $request->file('featured_image');
+                $featured_image_original_name = $featured_image->getClientOriginalName();
+                $featured_image_with_path = $featured_image->store('products','public');
+
+                $path_with_file_name = storage_path("app/public/{$product->feature_image}");
+                if(File::exists($path_with_file_name)){
+                    unlink($path_with_file_name);
+                }
+            } else {
+                $featured_image_with_path = $product->feature_image;
+                $featured_image_original_name = $product->feature_image_original_name;
+            }
+            $updated = $product->update([
+                'name' => $request->name,
+                'description' => $request->description,
+                'price' => $request->price,
+                'feature_image' => $featured_image_with_path,
+                'feature_image_original_name' => $featured_image_original_name
+            ]);
+            if($updated){
+                return redirect()->route('products.index')->with('success', 'Product update successfully');
+            }
+            return redirect()->back()->with('error', 'Unable to update product');
+        }
+        return redirect()->back()->with('error', 'Unable to find product');
     }
 
     /**
@@ -100,6 +130,14 @@ class ProductController extends Controller
      */
     public function destroy(Product $product)
     {
-        //
+        if($product){
+            $path_with_file_name = storage_path("app/public/{$product->feature_image}");
+            if(File::exists($path_with_file_name)){
+                unlink($path_with_file_name);
+            }
+            $product->delete();
+            return redirect()->route('products.index')->with('success', 'Product delete successfully');
+        }
+        return redirect()->back()->with('error', 'Unable to find product');
     }
 }

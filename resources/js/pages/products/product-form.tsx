@@ -8,7 +8,7 @@ import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, useForm } from '@inertiajs/react';
 import React, { ChangeEvent } from 'react';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, LoaderCircle } from 'lucide-react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -31,17 +31,26 @@ export default function ProductForm({ product, is_view, is_edit} : {product: Pro
             href: route('products.create'),
         },
     ];
-    const { data, setData, post, processing, errors } = useForm({
+    const { data, setData, reset, post, processing, errors } = useForm({
         name: product?.name || '',
         description: product?.description || '',
         price: product?.price || '',
-        featured_image: null as File | null
+        featured_image: null as File | null,
+        _method: is_edit? "PUT": "POST", 
     });
     const submit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault()
-        post(route('products.store'), {
-            onSuccess: () => console.log('From submitted')
-        })
+        if(is_edit){
+            post(route('products.update', product.id), {
+                forceFormData: true,
+                onSuccess: () => reset(),
+            })
+        }
+        else {
+            post(route('products.store'), {
+                onSuccess: () => reset(),
+            })
+        }
     }
     const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         if(e.target.files && e.target.files.length > 0){
@@ -106,23 +115,30 @@ export default function ProductForm({ product, is_view, is_edit} : {product: Pro
                                     ></Input>
                                     <InputError message={errors.price}/>
                                 </div>
-                                {!is_view && (
-                                <div className="grid gap-2">
-                                    <Label htmlFor="name">Featured Image</Label>
-                                    <Input 
-                                        id="featured_image" name="featured_image" type="file" 
-                                        autoFocus 
-                                        tabIndex={4}
-                                        onChange={handleFileUpload}
-                                        readOnly={is_view || processing}
-                                    ></Input>
-                                    <InputError message={errors.featured_image}/>
-                                </div>
+                                {(is_view || is_edit) && (
+                                    <div className='grid gap-2'>
+                                        <Label htmlFor='feature_image'>Current Feature Image</Label>
+                                        <img src={`/storage/${product.feature_image}`} alt="Feature Image" className='w-50 rounded-lg border'/>
+                                    </div>
                                 )}
                                 {!is_view && (
-                                    <Button type="submit" className="mt-4 w-fit cursor-pointer" tabIndex={4}>
-                                        Save Product
-                                    </Button>
+                                    <>
+                                        <div className="grid gap-2">
+                                            <Label htmlFor="name">Featured Image</Label>
+                                            <Input 
+                                                id="featured_image" name="featured_image" type="file" 
+                                                autoFocus 
+                                                tabIndex={4}
+                                                onChange={handleFileUpload}
+                                                readOnly={is_view || processing}
+                                            ></Input>
+                                            <InputError message={errors.featured_image}/>
+                                        </div>
+                                        <Button type="submit" className="mt-4 w-fit cursor-pointer flex item-center justify-center gap-1" tabIndex={4}>
+                                            {processing && <LoaderCircle className='h-4 w-4 animate-spin'/>}
+                                            {processing? (is_edit? 'Updating...': 'Creating...'): (is_edit? 'Update': 'Create')} Product
+                                        </Button>
+                                    </>
                                 )}
                             </div>
                         </form>

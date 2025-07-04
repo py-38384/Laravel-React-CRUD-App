@@ -24,30 +24,17 @@ interface Product{
     created_at: string
 }
 export default function Index({products}:{products: Product[]}) {
-    // const { flash } = usePage<{ flash?: { success?: string; error?: string }}>().props;
-    // const flashMessage = flash?.success || flash?.error;
-    // const alertClasses = `${flash?.success ? 'bg-green-800': flash?.error? 'bg-red-800': ''} ml-auto max-w-md text-white`;
-
-    // const [showAlert, setShowAlert] = useState((flash?.success|| flash?.error)? true: false)
-    // console.log(flashMessage, flash, showAlert)
-    // useEffect(() => {
-    //     const timer = setTimeout(() => {
-    //         if(flashMessage){
-    //             setShowAlert(false)
-    //         }
-    //     }, 3000)
-    //     return () => clearTimeout(timer);
-    // },[flashMessage])
     const { flash } = usePage<{ flash?: { success?: string; error?: string } }>().props;
     const flashMessage = flash?.success || flash?.error;
-    const [showAlert, setShowAlert] = useState(flash?.success || flash?.error ? true : false);
+    const [showAlert, setShowAlert] = useState(false);
     useEffect(() => {
-        console.log(flash)
-        if (flashMessage) {
+        if (flash?.success || flash?.error) {
+            setShowAlert(true);
+
             const timer = setTimeout(() => setShowAlert(false), 3000);
             return () => clearTimeout(timer);
         }
-    }, [flashMessage]);
+    }, [flash?.success, flash?.error]);
     const alertClasses = `${flash?.success ? 'bg-green-800': flash?.error? 'bg-red-800': ''} ml-auto max-w-md text-white`;
     return (
         <AppLayout breadcrumbs={breadcrumbs}>

@@ -25,11 +25,13 @@ class ProductFormRequest extends FormRequest
             "name"=> ["required","string","max:255"],
             "description" => ["required","string","max:1000"],
             "price" => ["required","numeric","min:0"],
+            "featured_image" => ["image","mimes:jpeg,png,jpg,gif","max:2048"],
         ];
         if($this->routeIs('products.update')){
-            $validateRules['featured_image'] = ["nullable","image","mimes:jpeg,png,jpg,gif","max:2048"];
-        } elseif($this->routeIs('products.create')){
-            $validateRules['featured_image'] = ["required","image","mimes:jpeg,png,jpg,gif","max:2048"];
+            array_unshift($validateRules['featured_image'],"nullable");
+        } 
+        if($this->routeIs('products.store')){
+            array_unshift($validateRules['featured_image'],"required");
         }
         return $validateRules;
     }

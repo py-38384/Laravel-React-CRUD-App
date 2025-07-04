@@ -17,16 +17,23 @@ class ProductController extends Controller
      */
     public function index(Request $request)
     {
+        $perPage = (int)($request->perPage ?? 5);
         $query = Product::query();
+        $productCount = 0;
         if($request->get('search')){
             $search_query = $request->get('search');
             $query = $query->where('name','like','%'. $search_query .'%');
+            $productCount = $query->count();
         }
-        $products = $query->latest()->paginate(3)->withQueryString();
+        if($perPage === -1){
+            $products = $query->latest()->paginate(Product::count())->withQueryString();
+        } else {
+            $products = $query->latest()->paginate($perPage)->withQueryString();
+        }
         foreach ($products as $product) {
             $product->created_at_formated = $product->created_at->format("d M y");
         }
-        return Inertia::render('products/index',['products' => $products, 'filters' => $request->only(['search'])]);
+        return Inertia::render('products/index',['products' => $products, 'filters' => $request->only(['search','perPage']), 'count' => $productCount]);
     }
 
     /**

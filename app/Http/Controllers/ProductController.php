@@ -8,27 +8,25 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\File;
 use App\Http\Requests\ProductFormRequest;
+use Laravel\Pail\ValueObjects\Origin\Console;
 
 class ProductController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $products = Product::latest()->get()->map(function ($product){
-            return [
-                "id" => $product->id,
-                "name" => $product->name,
-                "price" => $product->price,
-                "description" => $product->description,
-                "feature_image" => $product->feature_image,
-                "feature_image_original_name" => $product->feature_image_original_name,
-                "created_at" => $product->created_at->format("d M Y"),
-            ];
-        });
-        // $products = Product::latest()->get();
-        return Inertia::render('products/index',['products' => $products]);
+        $query = Product::query();
+        if($request->get('search')){
+            $search_query = $request->get('search');
+            $query = $query->where('name','like','%'. $search_query .'%');
+        }
+        $products = $query->latest()->paginate(3)->withQueryString();
+        foreach ($products as $product) {
+            $product->created_at_formated = $product->created_at->format("d M y");
+        }
+        return Inertia::render('products/index',['products' => $products, 'filters' => $request->only(['search'])]);
     }
 
     /**

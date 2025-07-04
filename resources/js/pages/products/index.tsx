@@ -3,10 +3,12 @@ import { PlaceholderPattern } from '@/components/ui/placeholder-pattern';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Button } from '@/components/ui/button';
-import { Head, router, usePage } from '@inertiajs/react';
+import { Head, router, useForm, usePage } from '@inertiajs/react';
 import { Link } from '@inertiajs/react';
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { CirclePlus, Eye, Pencil, Trash, Trash2 } from 'lucide-react';
+import Pagination from '@/components/ui/pagination';
+import { Input } from '@/components/ui/input';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -21,12 +23,63 @@ interface Product{
     description: string,
     price: number,
     feature_image: string
-    created_at: string
+    created_at_formated: string
 }
-export default function Index({products}:{products: Product[]}) {
+interface PaginationLink{
+    active: boolean,
+    label: string,
+    url: string,
+}
+export interface ProductPagination{
+    data: Product[],
+    current_page: number,
+    first_page_url: string,
+    from: number,
+    last_page: number,
+    last_page_url: string,
+    links: PaginationLink[],
+    next_page_url: string,
+    path: string,
+    per_page: number,
+    prev_page_url: string | null,
+    to: number,
+    total: number,
+}
+interface Filter{
+    search: string
+}
+interface IndexProps{
+    products: ProductPagination,
+    filters: Filter,
+}
+export default function Index({products, filters}: IndexProps){
     const { flash } = usePage<{ flash?: { success?: string; error?: string } }>().props;
     const flashMessage = flash?.success || flash?.error;
     const [showAlert, setShowAlert] = useState(false);
+    const [searchQuery, setSearchQuery] = useState(filters?.search?filters?.search:'');
+    const [productsData, setProductsData] = useState(products.data);
+    const {data, setData} = useForm({
+        search: '',
+    })
+    useEffect(() => {
+        setProductsData(products.data)
+    },[products])
+    const handleChangeEventSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setProductsData(products.data.filter(product => {
+            if(product.name.toLocaleLowerCase().includes(e.target.value.toLocaleLowerCase())) return true
+            return false
+        }))
+        setSearchQuery(e.target.value);
+    }
+    const handleSubmitSearch = (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault()
+        setData('search',searchQuery)
+        const queryString = searchQuery ? {search: searchQuery} : {} 
+        router.get(route('products.index'), queryString, {
+            preserveState: true,
+            preserveScroll: true,
+        })
+    }
     useEffect(() => {
         if (flash?.success || flash?.error) {
             setShowAlert(true);
@@ -50,9 +103,15 @@ export default function Index({products}:{products: Product[]}) {
                         </AlertDescription>
                     </Alert>
                 )}
+                <div className='flex'>
+                <form onSubmit={handleSubmitSearch} className='w-1/3 flex gap-1'>
+                    <Input type='text' onChange={handleChangeEventSearch} value={searchQuery} placeholder='Search Product' className='w-full' name='search'/>
+                    <Button type='submit' className='bg-indigo-800 px-4 py-2 rounded-lg text-white text-md cursor-pointer hover:opacity-90 flex item-center justify-center gap-1'>Submit</Button>
+                </form>
                 <div className='ml-auto'>
-                <Link as='button' className='bg-indigo-800 px-4 py-2 rounded-lg text-white text-md cursor-pointer hover:opacity-90 flex item-center justify-center gap-1' href={route('products.create')}>
-                <CirclePlus className="inline"/> Add Product</Link>
+                    <Link as='button' className='bg-indigo-800 px-4 py-2 rounded-lg text-white text-md cursor-pointer hover:opacity-90 flex item-center justify-center gap-1' href={route('products.create')}>
+                    <CirclePlus className="inline"/> Add Product</Link>
+                </div>
                 </div>
 
                 <div className="overflow-hidden rounded-lg border bg-white shadow-sm">
@@ -69,14 +128,14 @@ export default function Index({products}:{products: Product[]}) {
                             </tr>
                         </thead>
                         <tbody>
-                            {products.length > 0 ? products.map((product: Product, index) => (
+                            {productsData.length > 0 ? productsData.map((product: Product, index) => (
                             <tr key={index}>
-                                <td className='px-4 py-2 text-center border'>{index+1}.</td>
+                                <td className='px-4 py-2 text-center border'>{index+products.from}.</td>
                                 <td className='px-4 py-2 text-center border'>{product.name}</td>
                                 <td className='px-4 py-2 text-center border w-[400px]'>{product.description.length >= 40? `${product.description.substring(0, 40)}...`: product.description}</td>
                                 <td className='px-4 py-2 text-center border'>{product.price}</td>
                                 <td className='px-4 py-2 text-center border'><img src={`/storage/${product.feature_image}`} alt={product.name} className='h-16 w-16 object-cover' /></td>
-                                <td className='px-4 py-2 text-center border'>{product.created_at}</td>
+                                <td className='px-4 py-2 text-center border'>{product.created_at_formated}</td>
                                 <td className='px-4 py-2 text-center border'>
                                     <div className='flex gap-1 h-full'>
                                     <Link as='button' className='bg-sky-600 text-white p-2 rounded-lg cursor-pointer hover:opacity-90' href={route('products.show', product.id)}><Eye/></Link>
@@ -102,6 +161,7 @@ export default function Index({products}:{products: Product[]}) {
                         </tbody>
                     </table>
                 </div>
+                <Pagination products={products}/>
             </div>
         </AppLayout>
     );
